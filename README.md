@@ -102,4 +102,4 @@ The AI reads the actual code and determines whether `req.query.username` flowing
 
 Apache License 2.0 — see [LICENSE](LICENSE).
 
-© 2026 Sthenos Security. All rights reserved. REACHABLE is a trademark of Sthenos Security. Patent Pending.
+© 2026 Sthenos Security. All rights reserved. Patent Pending.

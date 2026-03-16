@@ -70,11 +70,6 @@ jobs:
 
           reachctl scan . $SCAN_FLAGS
 
-          # Generate SARIF if --sarif didn't produce it (older wheel)
-          if [ ! -f reachable.sarif ]; then
-            reachctl export --repo . --format sarif --output reachable.sarif || true
-          fi
-
       - name: Upload Dashboard
         if: always()
         uses: actions/upload-artifact@v4

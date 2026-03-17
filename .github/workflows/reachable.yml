@@ -15,10 +15,12 @@
 #   FAIL_THRESHOLD       — critical | high | medium | any | none  (default: high)
 #   RUNNER_LABEL         — self-hosted runner label  (default: ubuntu-latest)
 #
-# ── AI Reachability (optional) ───────────────────────────────────────
-#   Add GROQ_API_KEY as a repo secret → AI analysis runs automatically.
-#   No key → scan still works, just without variable-level taint analysis.
-#   Get a free key: https://console.groq.com/keys
+# ── AI Taint Analysis (optional) ────────────────────────────────────
+#   Add GROQ_API_KEY (or ANTHROPIC_API_KEY / OPENAI_API_KEY) as a repo
+#   secret → AI taint analysis runs automatically on every scan.
+#   No key → scan still works, without variable-level taint verification.
+#   Get a free Groq key: https://console.groq.com/keys
+#   Use --no-ai-taint in scan flags to skip even when a key is present.
 
 name: REACHABLE Security Scan
 
@@ -59,16 +61,10 @@ jobs:
         env:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           # ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          # OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
-          SCAN_FLAGS="--ci --fail-on $FAIL_THRESHOLD --sarif reachable.sarif"
-
-          # Auto-enable AI reachability if key is available
-          if [ -n "$GROQ_API_KEY" ] || [ -n "$ANTHROPIC_API_KEY" ]; then
-            SCAN_FLAGS="$SCAN_FLAGS --ai-enhance"
-            echo "::notice::AI reachability enabled — variable-level taint analysis active"
-          fi
-
-          reachctl scan . $SCAN_FLAGS
+          export PATH="$HOME/.reachable/venv/bin:$HOME/.reachable/tools/bin:$PATH"
+          reachctl scan . --ci --fail-on $FAIL_THRESHOLD --sarif reachable.sarif
 
       - name: Upload Dashboard
         if: always()

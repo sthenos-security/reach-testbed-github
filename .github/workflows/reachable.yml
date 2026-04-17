@@ -7,7 +7,7 @@
 # ── Setup ─────────────────────────────────────────────────────────────
 # 1. Fork this repo
 # 2. Push — pipeline runs automatically
-# 3. Optional: Add GROQ_API_KEY as a repo secret for AI reachability
+# 3. Optional: Add an AI provider key as a repo secret for AI reachability
 #
 # ── Repo variables (Settings → Secrets and variables → Actions) ──────
 #   REACHABLE_DIST_REPO  — dist repo  (default: sthenos-security/reach-dist)
@@ -15,12 +15,14 @@
 #   FAIL_THRESHOLD       — critical | high | medium | any | none  (default: high)
 #   RUNNER_LABEL         — self-hosted runner label  (default: ubuntu-latest)
 #
-# ── AI Taint Analysis (optional) ────────────────────────────────────
-#   Add GROQ_API_KEY (or ANTHROPIC_API_KEY / OPENAI_API_KEY) as a repo
-#   secret → AI taint analysis runs automatically on every scan.
-#   No key → scan still works, without variable-level taint verification.
-#   Get a free Groq key: https://console.groq.com/keys
-#   Use --no-ai-taint in scan flags to skip even when a key is present.
+# ── AI Reachability (optional) ──────────────────────────────────────
+#   Add ONE of the following as a repo secret:
+#     OPENROUTER_API_KEY  — Recommended: single key, 300+ models (openrouter.ai)
+#     ANTHROPIC_API_KEY   — Claude (highest accuracy)
+#     GROQ_API_KEY        — Groq (fast, low cost, free tier)
+#     OPENAI_API_KEY      — OpenAI GPT-4o
+#   AI reachability runs automatically when any key is detected.
+#   No key → scan still works, without AI taint verification.
 
 name: REACHABLE Security Scan
 
@@ -49,6 +51,13 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Cache REACHABLE data
+        uses: actions/cache@v4
+        with:
+          path: ~/.reachable
+          key: reachable-${{ runner.os }}-${{ hashFiles('**/requirements*.txt', '**/package-lock.json', '**/go.sum') }}
+          restore-keys: reachable-${{ runner.os }}-
+
       - name: Install REACHABLE
         run: |
           ARGS=()
@@ -59,9 +68,10 @@ jobs:
 
       - name: Scan
         env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
-          # ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          # OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
           export PATH="$HOME/.reachable/venv/bin:$HOME/.reachable/tools/bin:$PATH"
           reachctl scan . --ci --fail-on $FAIL_THRESHOLD --sarif reachable.sarif

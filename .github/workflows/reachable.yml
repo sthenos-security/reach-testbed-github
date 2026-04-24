@@ -47,12 +47,12 @@ jobs:
     runs-on: ${{ vars.RUNNER_LABEL || 'ubuntu-latest' }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
       - name: Cache REACHABLE data
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.reachable
           key: reachable-${{ runner.os }}-${{ hashFiles('**/requirements*.txt', '**/package-lock.json', '**/go.sum') }}
@@ -78,7 +78,7 @@ jobs:
 
       - name: Upload Dashboard
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: reachable-dashboard
           path: ~/.reachable/scans/**/dashboard/

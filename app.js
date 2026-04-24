@@ -6,9 +6,15 @@
  * EXPECTED FINDINGS:
  * ==================
  * CVEs:      4 (via package.json - lodash, axios, mongoose, express)
- * Secrets:   3 (JWT secret, API key, DB connection string)
+ * Secrets:   3 (JWT secret, API key, DB connection string — HARDCODED = flagged)
  * CWEs:      3 (NoSQL injection, XSS, prototype pollution)
  * Config:    4 (via Dockerfile)
+ * Malware:   0 (process.env reads are secure loading, NOT credential harvesting)
+ *
+ * SECURE LOADING (should NOT be flagged):
+ * - SAFE-001: process.env.STRIPE_SECRET_KEY (env var = secure)
+ * - SAFE-002: process.env.REDIS_URL (env var with fallback = secure)
+ * - SAFE-003: getVaultSecret() pattern (vault/SSM = secure)
  *
  * REACHABILITY:
  * - 9 findings should be REACHABLE
@@ -116,6 +122,30 @@ async function connectDB() {
         console.error('MongoDB connection error:', err);
     }
 }
+
+
+// ============================================================
+// SECURE SECRET LOADING (should NOT be flagged)
+// ============================================================
+
+// SAFE-001: Secret loaded from environment variable (secure method)
+const STRIPE_KEY = process.env.STRIPE_SECRET_KEY;
+
+// SAFE-002: Secret loaded from environment with fallback
+const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
+
+// SAFE-003: Secret loaded via SDK (simulated vault/SSM fetch)
+// In real code: const secret = await SecretClient.getSecret("my-api-key");
+async function getVaultSecret(name) {
+    // This pattern represents fetching from AWS SSM, HashiCorp Vault,
+    // Azure Key Vault, etc. The secret is never in source code.
+    return process.env[name];
+}
+
+app.get('/payment', async (req, res) => {
+    if (!STRIPE_KEY) return res.status(500).json({ error: 'Stripe not configured' });
+    res.json({ status: 'Stripe configured via env var' });
+});
 
 
 // ============================================================

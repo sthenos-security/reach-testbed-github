@@ -76,14 +76,6 @@ jobs:
           export PATH="$HOME/.reachable/venv/bin:$HOME/.reachable/tools/bin:$PATH"
           reachctl scan . --ci --fail-on $FAIL_THRESHOLD --sarif reachable.sarif
 
-      - name: Upload Dashboard
-        if: always()
-        uses: actions/upload-artifact@v5
-        with:
-          name: reachable-dashboard
-          path: ~/.reachable/scans/**/dashboard/
-          retention-days: 30
-
       - name: Upload SARIF to GitHub Security Tab
         if: always()
         uses: github/codeql-action/upload-sarif@v4

@@ -6,8 +6,8 @@
  * EXPECTED FINDINGS:
  * ==================
  * CVEs:      4 (via package.json - lodash, axios, mongoose, express)
- * Secrets:   3 (JWT secret, API key, DB connection string — HARDCODED = flagged)
- * CWEs:      3 (NoSQL injection, XSS, prototype pollution)
+ * Secrets:   4 (JWT secret, API key, DB conn string, session secret)
+ * CWEs:      7 (NoSQL injection x3, XSS x2, prototype pollution, path traversal)
  * Config:    4 (via Dockerfile)
  * Malware:   0 (process.env reads are secure loading, NOT credential harvesting)
  *
@@ -17,8 +17,8 @@
  * - SAFE-003: getVaultSecret() pattern (vault/SSM = secure)
  *
  * REACHABILITY:
- * - 9 findings should be REACHABLE
- * - 1 finding should be UNREACHABLE (dead code)
+ * - See TESTCASES.md for full regression matrix
+ * - Dead code: connectLegacy, deprecatedAuth, _hiddenCallback
  */
 
 const express = require('express');
@@ -27,9 +27,18 @@ const _ = require('lodash');
 const axios = require('axios');
 const jwt = require('jsonwebtoken');
 
+const apiRouter = require('./routes/api');
+const authRouter = require('./routes/auth');
+const adminRouter = require('./routes/admin');
+const uploadRouter = require('./routes/upload');
+
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use('/api', apiRouter);
+app.use('/auth', authRouter);
+app.use('/admin', adminRouter);
+app.use('/upload', uploadRouter);
 
 
 // ============================================================
